@@ -7,6 +7,7 @@ import time as ti
 import projects as pj
 import sys as sys
 import config as cfg
+import git as git
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 """                                                                                                                  """
@@ -61,7 +62,9 @@ class MenuBar(tk.Menu):
         self.add_cascade(label="Hilfe", menu=self.help_menu)
 
     def about(self):
-        last_modification = dt.datetime.fromtimestamp(pl.Path("main.py").stat().st_mtime)
+        repo = git.Repo(search_parent_directories=True)
+        sha = repo.head.object.hexsha
+        commit_date = ti.strftime("%d.%m.%Y %H:%M Uhr", ti.gmtime(repo.head.commit.committed_date))
 
         new = tk.Frame(self.master.main, bg=bgc, highlightthickness=1, highlightcolor=fgc)
         top = tk.Label(new, text="Mathe Werkstatt", bg=bgc, fg=fgc, font=('Ebrima', 34, 'bold'))
@@ -74,18 +77,20 @@ class MenuBar(tk.Menu):
         right2 = tk.Label(new, text="maximilian.hesse@uni-oldenburg.de", bg=bgc, fg=fgc, font=font_text,
                           justify='left')
         left3 = tk.Label(new, text="Letztes Update:", bg=bgc, fg=fgc, font=font_text, justify='left')
-        right3 = tk.Label(new, text=str(last_modification), bg=bgc, fg=fgc, font=font_text, justify='left')
-        left4 = tk.Label(new, text="Erstellt mit:", bg=bgc, fg=fgc, font=font_text, justify='left')
-        right4 = tk.Label(new, text="PyCharm (Community Edition)", bg=bgc, fg=fgc, font=font_text, justify='left')
-        left5 = tk.Label(new, text="Python Version:", bg=bgc, fg=fgc, font=font_text, justify='left')
-        right5 = tk.Label(new, text=f"{sys.version_info[0]}.{sys.version_info[1]}", bg=bgc, fg=fgc,
+        right3 = tk.Label(new, text=str(commit_date), bg=bgc, fg=fgc, font=font_text, justify='left')
+        left4 = tk.Label(new, text="Git Hash:", bg=bgc, fg=fgc, font=font_text, justify='left')
+        right4 = tk.Label(new, text=str(sha), bg=bgc, fg=fgc, font=font_text, justify='left')
+        left5 = tk.Label(new, text="Erstellt mit:", bg=bgc, fg=fgc, font=font_text, justify='left')
+        right5 = tk.Label(new, text="PyCharm (Community Edition)", bg=bgc, fg=fgc, font=font_text, justify='left')
+        left6 = tk.Label(new, text="Python Version:", bg=bgc, fg=fgc, font=font_text, justify='left')
+        right6 = tk.Label(new, text=f"{sys.version_info[0]}.{sys.version_info[1]}", bg=bgc, fg=fgc,
                           font=font_text, justify='left')
-        left6 = tk.Label(new, text="Lizenz:", bg=bgc, fg=fgc, font=font_text, justify='left')
-        right6 = tk.Label(new, text="Freeware für nicht-kommerziellen Einsatz", bg=bgc, fg=fgc, font=font_text,
+        left7 = tk.Label(new, text="Lizenz:", bg=bgc, fg=fgc, font=font_text, justify='left')
+        right7 = tk.Label(new, text="Freeware für nicht-kommerziellen Einsatz", bg=bgc, fg=fgc, font=font_text,
                           justify='left')
 
         top.grid(row=1, column=5, columnspan=3, sticky=tk.NW)
-        label_logo.grid(row=1, column=1, rowspan=7, sticky=tk.S)
+        label_logo.grid(row=1, column=1, rowspan=19, sticky=tk.S)
         left1.grid(row=2, column=5, sticky=tk.NW)
         right1.grid(row=2, column=6, sticky=tk.NW)
         left2.grid(row=3, column=5, sticky=tk.NW)
@@ -98,6 +103,8 @@ class MenuBar(tk.Menu):
         right5.grid(row=6, column=6, sticky=tk.NW)
         left6.grid(row=7, column=5, sticky=tk.NW)
         right6.grid(row=7, column=6, sticky=tk.NW)
+        left7.grid(row=8, column=5, sticky=tk.NW)
+        right7.grid(row=8, column=6, sticky=tk.NW)
 
         self.master.main.del_current()
         self.master.main.recreate_current(new)
@@ -201,7 +208,6 @@ class MainApp(tk.Frame):
 
 
 if __name__ == "__main__":
-    print("test")
     root = tk.Tk()
     root.attributes('-fullscreen', True)
     MainApp(root).pack(side="top", fill="both", expand=True)
