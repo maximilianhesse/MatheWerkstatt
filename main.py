@@ -201,6 +201,7 @@ class MainApp(tk.Frame):
 
 
 if __name__ == "__main__":
+    print("test")
     root = tk.Tk()
     root.attributes('-fullscreen', True)
     MainApp(root).pack(side="top", fill="both", expand=True)
