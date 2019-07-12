@@ -109,6 +109,18 @@ class ECanvas(tk.Canvas):
                         self.itemconfigure(circle, state=tk.NORMAL)
                     else:
                         self.itemconfigure(circle, state=tk.HIDDEN)
+            elif 'circle' in current_tags or 'circle_aa' in current_tags:       # events bound to prime circles
+                if self.anti_aliasing:
+                    for circle in self.circle_list_aa:
+                        if self.gettags(circle)[1] == current_tags[1]:
+                            self.itemconfigure(circle, state=tk.NORMAL)
+                        else:
+                            self.itemconfigure(circle, state=tk.HIDDEN)
+                for circle in self.circle_list:
+                    if self.gettags(circle)[1] == current_tags[1]:
+                        self.itemconfigure(circle, state=tk.NORMAL)
+                    else:
+                        self.itemconfigure(circle, state=tk.HIDDEN)
         else:                                                                   # events bound to the canvas background
             if self.anti_aliasing:
                 for circle in self.circle_list_aa:
