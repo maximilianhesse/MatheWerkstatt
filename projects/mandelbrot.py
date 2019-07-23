@@ -36,9 +36,9 @@ font_text = cfg.font_text           # font for standard text
 """                                                                                                                  """
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-max_iterations = 256        # standard maximum iterations
-gamma = 0.3                 # standard gamma setting
-color_map = plt.get_cmap('gnuplot2')           # standard matplotlib color map
+max_iterations = 256                            # standard maximum iterations
+gamma = 0.3                                     # standard gamma setting
+color_map = plt.get_cmap('gnuplot2')            # standard matplotlib color map
 
 
 @jit
