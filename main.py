@@ -51,6 +51,7 @@ class MenuBar(tk.Menu):
         self.project_menu = MenuItem(self, tearoff=0)                        # creation of project menu cascade
         self.project_menu.add_command(label="Mandelbrot", command=self.mandelbrot)
         self.project_menu.add_command(label="Sieb des Erathostenes", command=self.erathostenes)
+        self.project_menu.add_command(label="Circle Packing Algorithmus", command=self.circle_packing)
         self.add_cascade(label="Projekte", menu=self.project_menu)
 
         self.help_menu = MenuItem(self, tearoff=0)                           # creation of help menu cascade
@@ -115,15 +116,21 @@ class MenuBar(tk.Menu):
     def change_fact(self):
         self.master.status.change_fact()
 
-    def mandelbrot(self):
+    def circle_packing(self):
         self.master.main.del_current()
-        new = pj.mandelbrot.MandelbrotMain(self.master.main, bg=bgc)
+        new = pj.circle_packing.CircleMain(self.master.main, bg=bgc)
         self.master.main.recreate_current(new)
 
     def erathostenes(self):
         self.master.main.del_current()
         new = pj.erathostenes.ErathostenesMain(self.master.main, bg=bgc)
         self.master.main.recreate_current(new)
+
+    def mandelbrot(self):
+        self.master.main.del_current()
+        new = pj.mandelbrot.MandelbrotMain(self.master.main, bg=bgc)
+        self.master.main.recreate_current(new)
+
 
 
 class MenuItem(tk.Menu):
