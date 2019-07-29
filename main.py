@@ -50,8 +50,9 @@ class MenuBar(tk.Menu):
 
         self.project_menu = MenuItem(self, tearoff=0)                        # creation of project menu cascade
         self.project_menu.add_command(label="Mandelbrot", command=self.mandelbrot)
-        self.project_menu.add_command(label="Sieb des Erathostenes", command=self.erathostenes)
-        self.project_menu.add_command(label="Circle Packing Algorithmus", command=self.circle_packing)
+        self.project_menu.add_command(label="Sieb des Erathostenes (in Arbeit)", command=self.erathostenes)
+        self.project_menu.add_command(label="Circle Packing Algorithmus (in Arbeit)", command=self.circle_packing)
+        self.project_menu.add_command(label="Projekt Euler (in Arbeit)", command=self.project_euler)
         self.add_cascade(label="Projekte", menu=self.project_menu)
 
         self.help_menu = MenuItem(self, tearoff=0)                           # creation of help menu cascade
@@ -89,7 +90,7 @@ class MenuBar(tk.Menu):
                           justify='left')
 
         top.grid(row=1, column=5, columnspan=3, sticky=tk.NW)
-        label_logo.grid(row=1, column=1, rowspan=19, sticky=tk.S)
+        label_logo.grid(row=1, column=1, rowspan=8, sticky=tk.S)
         left1.grid(row=2, column=5, sticky=tk.NW)
         right1.grid(row=2, column=6, sticky=tk.NW)
         left2.grid(row=3, column=5, sticky=tk.NW)
@@ -131,6 +132,10 @@ class MenuBar(tk.Menu):
         new = pj.mandelbrot.MandelbrotMain(self.master.main, bg=bgc)
         self.master.main.recreate_current(new)
 
+    def project_euler(self):
+        self.master.main.del_current()
+        new = pj.project_euler.EulerMain(self.master.main, bg=bgc)
+        self.master.main.recreate_current(new)
 
 
 class MenuItem(tk.Menu):

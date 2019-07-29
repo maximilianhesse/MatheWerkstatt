@@ -55,7 +55,7 @@ def check1(c, maxiter, horizon, log_horizon):
 @jit
 def check2(c, maxiter):
     z = c
-    for n in range(maxiter):
+    for n in range(1, maxiter):
         if abs(z) > 2:
             return n
         z = z * z + c

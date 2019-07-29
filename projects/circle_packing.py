@@ -37,11 +37,11 @@ class CircleMain(tk.Frame):
         self.c_width = 0
         self.c_height = 0
         self.simultaneous_circles = 1
-        self.max_attempts = 1000
-        self.min_r = 3
-        self.max_r = 50
+        self.max_attempts = 10000
+        self.min_r = 1
+        self.max_r = 15
         self.drawing = True
-        self.growing_delay = 2
+        self.growing_delay = 0
         self.circle_list = []
         self.drawing_mode = 2               # 1: rectangle fill, 2: b/w fill, 3: colored picture fill
         self.image = None
@@ -63,6 +63,26 @@ class CircleMain(tk.Frame):
         self.c_height = self.canvas.winfo_height()
         if self.drawing_mode == 2:
             self.image = tk.PhotoImage(file="logo2.gif")
+            # todo: add more functionality, like canceling the initialization and asking for a new image...
+            pixels_total = 0
+            pixels_c = 0
+            pixels_b = 0
+            pixels_w = 0
+            for x in range(self.image.width()):
+                for y in range(self.image.height()):
+                    pixels_total += 1
+                    if self.image.get(x, y) == (0, 0, 0):
+                        pixels_b += 1
+                    elif self.image.get(x, y) == (255, 255, 255):
+                        pixels_w += 1
+                    else:
+                        pixels_c += 1
+            percent_c = round(100 * pixels_c / pixels_total, 2)
+            percent_b = round(100 * pixels_b / pixels_total, 2)
+            percent_w = round(100 * pixels_w / pixels_total, 2)
+            self.master.master.status.set(f'Farbzusammensetzung: {percent_b}% schwarz, {percent_w}% weiß, '
+                                          f'{percent_c}% "farbig"')
+
             self.current_image = self.canvas.create_image((self.c_width / 2, self.c_height / 2), image=self.image,
                                                           state="normal")
             self.img_min_x = self.c_width // 2 - self.image.width() // 2
@@ -84,6 +104,8 @@ class CircleMain(tk.Frame):
             elif self.drawing_mode == 2:
                 x = rnd.randint(self.img_min_x + self.min_r + 1, self.img_max_x - self.min_r - 2)
                 y = rnd.randint(self.img_min_y + self.min_r + 1, self.img_max_y - self.min_r - 2)
+            else:                                   # functionality for drawing mode 3
+                x, y = None, None
             if self.is_drawable(x, y):
                 self.circle_list.append(Circle(self, x, y, r, len(self.circle_list)+1))
                 # print('circle added')
@@ -98,14 +120,16 @@ class CircleMain(tk.Frame):
 
     def is_drawable(self, x, y):
         """ checks whether a certain point allows for drawing of a new circle """
-        if self.drawing_mode == 1:
-            for circle in self.circle_list:
-                if ((x-circle.x) ** 2 + (y-circle.y) ** 2) ** 0.5 < circle.r+self.min_r+1.5:
-                    return False
-        elif self.drawing_mode == 2:
-            for circle in self.circle_list:
-                if ((x-circle.x) ** 2 + (y-circle.y) ** 2) ** 0.5 < circle.r+self.min_r+1.5:
-                    return False
+        for circle in self.circle_list:
+            if ((x-circle.x) ** 2 + (y-circle.y) ** 2) ** 0.5 < circle.r+self.min_r+1.5:
+                return False
+        if self.drawing_mode == 2:
+            """ checks for all points in the possible circle if the color is black """
+            for rect_x in range(x - self.img_min_x - self.min_r, x - self.img_min_x + self.min_r):
+                for rect_y in range(y - self.img_min_y - self.min_r, y - self.img_min_y + self.min_r):
+                    if ((x-self.img_min_x-rect_x)**2 + (y-self.img_min_y-rect_y)**2)**0.5 <= self.min_r:
+                        if self.image.get(rect_x, rect_y) != (0, 0, 0):
+                            return False
 
         return True
 
@@ -124,6 +148,12 @@ class CircleMain(tk.Frame):
                     or current.y-current.r < self.img_min_y+1 or current.y+current.r > self.img_max_y-2:
                 # print("circle can't grow, because it hit the outer bounds")
                 return False
+            for rect_x in range(int(current.x-self.img_min_x-current.r-0.5), int(current.x-self.img_min_x+current.r+0.5)):
+                for rect_y in range(int(current.y-self.img_min_y-current.r-0.5), int(current.y-self.img_min_y+current.r+0.5)):
+                    if ((current.x-self.img_min_x-rect_x)**2+(current.y-self.img_min_y-rect_y)**2)**0.5\
+                            <= current.r+0.5:
+                        if self.image.get(rect_x, rect_y) != (0, 0, 0):
+                            return False
         for circle in self.circle_list:
             if circle != current:
                 if ((current.x-circle.x) ** 2 + (current.y-circle.y) ** 2) ** 0.5 <\
