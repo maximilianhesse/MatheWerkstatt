@@ -2,6 +2,8 @@ import tkinter as tk
 import config as cfg
 import random as rnd
 import time as ti
+import PIL.Image
+import PIL.ImageTk
 
 
 class Circle:
@@ -11,17 +13,23 @@ class Circle:
         self.y = y
         self.r = r
         self.num = num
-        self.object_aa = self.master.canvas.create_oval(x - r, y - r, x + r, y + r, tags=num, outline=cfg.fgc_a,
-                                                        width=1.5, *args, **kwargs)
-        self.object = self.master.canvas.create_oval(x - r, y - r, x + r, y + r, tags=num, outline=cfg.fgc,
-                                                     width=1, *args, **kwargs)
+        if self.master.drawing_mode == 3:
+            self.object_aa = None
+            self.object = self.master.canvas.create_oval(x - r, y - r, x + r, y + r, tags=num,
+                                                         width=1, *args, **kwargs)
+        else:
+            self.object_aa = self.master.canvas.create_oval(x - r, y - r, x + r, y + r, tags=num, outline=cfg.fgc_a,
+                                                            width=1.5, *args, **kwargs)
+            self.object = self.master.canvas.create_oval(x - r, y - r, x + r, y + r, tags=num, outline=cfg.fgc,
+                                                         width=1, *args, **kwargs)
         self.master.after(1, self.grow)
 
     def grow(self):
         if self.master.is_growable(self):
             self.r += 0.5
-            self.master.canvas.coords(self.object_aa, self.x - self.r, self.y - self.r,
-                                      self.x + self.r, self.y + self.r)
+            if self.master.drawing_mode != 3:
+                self.master.canvas.coords(self.object_aa, self.x - self.r, self.y - self.r,
+                                          self.x + self.r, self.y + self.r)
             self.master.canvas.coords(self.object, self.x-self.r, self.y-self.r, self.x+self.r, self.y+self.r)
             self.master.after(self.master.growing_delay, self.grow)
         elif self.master.drawing:
@@ -39,11 +47,12 @@ class CircleMain(tk.Frame):
         self.simultaneous_circles = 1
         self.max_attempts = 10000
         self.min_r = 1
-        self.max_r = 15
+        self.max_r = 150
         self.drawing = True
-        self.growing_delay = 0
+        self.growing_delay = 1
         self.circle_list = []
-        self.drawing_mode = 2               # 1: rectangle fill, 2: b/w fill, 3: colored picture fill
+        self.drawing_mode = 1               # 1: rectangle fill, 2: b/w fill, 3: colored picture fill
+        self.pil_im = None
         self.image = None
         self.current_image = None
         self.img_min_x = None
@@ -89,8 +98,19 @@ class CircleMain(tk.Frame):
             self.img_max_x = self.c_width // 2 + self.image.width() // 2
             self.img_min_y = self.c_height // 2 - self.image.height() // 2
             self.img_max_y = self.c_height // 2 + self.image.height() // 2
+        if self.drawing_mode == 3:
+            im = PIL.Image.open("logo3.jpg")
+            self.pil_im = im.convert('RGB')
+            self.image = PIL.ImageTk.PhotoImage(self.pil_im)
+            self.current_image = self.canvas.create_image((self.c_width / 2, self.c_height / 2), image=self.image,
+                                                          state="normal")
+            self.img_min_x = self.c_width // 2 - self.image.width() // 2
+            self.img_max_x = self.c_width // 2 + self.image.width() // 2
+            self.img_min_y = self.c_height // 2 - self.image.height() // 2
+            self.img_max_y = self.c_height // 2 + self.image.height() // 2
+
         for _ in range(self.simultaneous_circles):
-            self.after(1, self.add_circle)
+            self.after(0, self.add_circle)
 
     def add_circle(self):
         """ adds a circle to the canvas and grows it until it hits an object or the edge of the canvas """
@@ -101,20 +121,33 @@ class CircleMain(tk.Frame):
             if self.drawing_mode == 1:
                 x = rnd.randint(self.min_r+1, self.c_width - self.min_r - 2)
                 y = rnd.randint(self.min_r+1, self.c_height - self.min_r - 2)
-            elif self.drawing_mode == 2:
+                if self.is_drawable(x, y):
+                    self.circle_list.append(Circle(self, x, y, r, len(self.circle_list) + 1))
+                    # print('circle added')
+                    break
+            else:
                 x = rnd.randint(self.img_min_x + self.min_r + 1, self.img_max_x - self.min_r - 2)
                 y = rnd.randint(self.img_min_y + self.min_r + 1, self.img_max_y - self.min_r - 2)
-            else:                                   # functionality for drawing mode 3
-                x, y = None, None
-            if self.is_drawable(x, y):
-                self.circle_list.append(Circle(self, x, y, r, len(self.circle_list)+1))
-                # print('circle added')
-                break
+                if self.drawing_mode == 2:
+                    if self.is_drawable(x, y):
+                        self.circle_list.append(Circle(self, x, y, r, len(self.circle_list) + 1))
+                        # print('circle added')
+                        break
+                else:
+                    if self.is_drawable(x, y):
+                        color = "#%02x%02x%02x" % self.pil_im.getpixel((x-self.img_min_x, y-self.img_min_y))
+                        self.circle_list.append(Circle(self, x, y, r, len(self.circle_list) + 1, outline=color,
+                                                       fill=color))
+                        # print('circle added')
+                        break
+
             attempts += 1
         if attempts == self.max_attempts:
-            if self.drawing_mode == 2:
+            if self.drawing_mode != 1:
                 self.image = None
                 self.current_image = None
+            if self.drawing_mode == 3:
+                self.pil_im = None
             self.master.master.status.set(f"Rechendauer: {round(ti.time()-self.starting_time, 2)}s")
             self.drawing = False
 
@@ -148,12 +181,20 @@ class CircleMain(tk.Frame):
                     or current.y-current.r < self.img_min_y+1 or current.y+current.r > self.img_max_y-2:
                 # print("circle can't grow, because it hit the outer bounds")
                 return False
-            for rect_x in range(int(current.x-self.img_min_x-current.r-0.5), int(current.x-self.img_min_x+current.r+0.5)):
-                for rect_y in range(int(current.y-self.img_min_y-current.r-0.5), int(current.y-self.img_min_y+current.r+0.5)):
+            for rect_x in range(int(current.x-self.img_min_x-current.r-0.5),
+                                int(current.x-self.img_min_x+current.r+0.5)):
+                for rect_y in range(int(current.y-self.img_min_y-current.r-0.5),
+                                    int(current.y-self.img_min_y+current.r+0.5)):
                     if ((current.x-self.img_min_x-rect_x)**2+(current.y-self.img_min_y-rect_y)**2)**0.5\
                             <= current.r+0.5:
                         if self.image.get(rect_x, rect_y) != (0, 0, 0):
                             return False
+        else:
+            # does circle grow out of bounds?
+            if current.x-current.r < self.img_min_x+1 or current.x+current.r > self.img_max_x-2\
+                    or current.y-current.r < self.img_min_y+1 or current.y+current.r > self.img_max_y-2:
+                # print("circle can't grow, because it hit the outer bounds")
+                return False
         for circle in self.circle_list:
             if circle != current:
                 if ((current.x-circle.x) ** 2 + (current.y-circle.y) ** 2) ** 0.5 <\
